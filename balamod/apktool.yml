@@ -1,0 +1,19 @@
+version: 2.12.1
+apkFileName: codexbalatro.apk
+usesFramework:
+  ids:
+  - 1
+sdkInfo:
+  minSdkVersion: 16
+  targetSdkVersion: 34
+packageInfo:
+  forcedPackageId: 127
+versionInfo:
+  versionCode: 33
+  versionName: 5.3.2115a
+doNotCompress:
+- arsc
+- ogg
+- png
+- assets/dexopt/baseline.prof
+- assets/dexopt/baseline.profm

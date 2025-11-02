@@ -1,0 +1,46 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "local t = create_UIBox_generic_options({back_func = 'options',contents = {create_tabs("
+position = "before"
+payload = '''
+if G.SETTINGS.GoldFinger ~= nil then
+    tabs[#tabs + 1] = {
+        label = "Gold Finger",
+        tab_definition_function = G.UIDEF.settings_tab,
+        tab_definition_function_args = 'goldFingerEnable'
+    }end'''
+
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+
+pattern = '''delay = G.GAME.current_round.current_hand.handname ~= disp_text and 0.4 or 0}, {handname=disp_text, level=G.GAME.hands[text].level, mult = G.GAME.hands[text].mult, chips = G.GAME.hands[text].chips})'''
+
+position = "at"
+payload ='''delay = G.GAME.current_round.current_hand.handname ~= disp_text and 0.4 or 0}, {handname=disp_text, level=G.GAME.hands[text].level, mult = not G.SETTINGS.GoldFinger.goldFingerEnable and G.GAME.hands[text].mult or G.GAME.hands[text].mult * G.SETTINGS.GoldFinger.scoreRate, chips = G.GAME.hands[text].chips})'''
+
+match_indent = true
+overwrite = true
+
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+
+pattern = '''mult = mod_mult(G.GAME.hands[text].mult)'''
+
+position = "at"
+payload = '''mult = not G.SETTINGS.GoldFinger.goldFingerEnable and mod_mult(G.GAME.hands[text].mult) or mod_mult(G.GAME.hands[text].mult) * G.SETTINGS.GoldFinger.scoreRate'''
+
+match_indent = true
+overwrite = true

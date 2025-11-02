@@ -1,0 +1,229 @@
+[manifest]
+version = "1.0.1g"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if effects.jokers.Xmult_mod then mult = mod_mult(mult*effects.jokers.Xmult_mod);extras.mult = true  end"
+position = "after"
+payload = '''
+if effects.jokers.Xchip_mod then hand_chips = mod_chips(hand_chips*effects.jokers.Xchip_mod);extras.hand_chips = true end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if effect.Xmult_mod then mult = mod_mult(mult*effect.Xmult_mod);extras.mult = true  end"
+position = "after"
+payload = '''
+if effect.Xchip_mod then hand_chips = mod_chips(hand_chips*effect.Xchip_mod);extras.hand_chips = true end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "x_mult = center.config.Xmult or 1,"
+position = "after"
+payload = '''
+h_p_dollars = center.config.h_p_dollars or 0,
+x_chips = center.config.Xchips or 0,
+h_x_chips = center.config.h_x_chips or 0,
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "local p_dollars = card:get_p_dollars()"
+position = "before"
+payload = '''
+local x_chips = card:get_chip_x_bonus()
+if x_chips > 0 then
+	ret.x_chips = x_chips
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "elseif eval_type == 'dollars' then"
+position = "before"
+payload = '''
+elseif (eval_type == 'x_chips') or (eval_type == 'h_x_chips') then
+	sound = 'multhit2'
+	amt = amt
+	text = 'X' .. amt .. '筹码'
+	colour = G.C.CHIPS
+	config.type = 'fade'
+	config.scale = 0.75
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if effects[ii].message then"
+position = "before"
+payload = '''
+if effects[ii].x_chips then
+	mod_percent = true
+	hand_chips = mod_chips(hand_chips*effects[ii].x_chips)
+	update_hand_text({delay = 0}, {chips = hand_chips})
+	card_eval_status_text(G.hand.cards[i], 'x_chips', effects[ii].x_chips, percent)
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "sound = extra.edition and 'foil2' or extra.mult_mod and 'multhit1' or extra.Xmult_mod and 'multhit2' or 'generic1'"
+position = "at"
+payload = '''sound = extra.edition and 'foil2' or extra.mult_mod and 'multhit1' or extra.Xmult_mod and 'multhit2' or extra.Xchip_mod and 'multhit2' or 'generic1'
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "--calculate the card edition effects"
+position = "before"
+payload = '''
+if effects[ii].x_chips then
+	mod_percent = true
+	if effects[ii].card then juice_card(effects[ii].card) end
+	hand_chips = mod_chips(hand_chips*effects[ii].x_chips)
+	update_hand_text({delay = 0}, {chips = hand_chips})
+	card_eval_status_text(scoring_hand[i], 'x_chips', effects[ii].x_chips, percent)
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = 'if effects[ii].edition.p_dollars_mod then'
+position = 'before'
+match_indent = true
+payload = '''
+if scoring_hand and scoring_hand[i] and scoring_hand[i].edition then
+	local trg = scoring_hand[i]
+	local edi = trg.edition
+	if edi.x_chips then
+		hand_chips = mod_chips(hand_chips * edi.x_chips)
+		update_hand_text({delay = 0}, {chips = hand_chips})
+		card_eval_status_text(trg, 'extra', nil, percent, nil,
+		{message = 'X'.. edi.x_chips .. 'Chips',
+		edition = true,
+		x_chips = true})
+	end
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = 'if edition_effects.jokers.x_mult_mod then'
+position = 'before'
+match_indent = true
+payload = '''
+if G.jokers.cards and G.jokers.cards[i] and G.jokers.cards[i].edition then
+	local trg = G.jokers.cards[i]
+	local edi = trg.edition
+	if edi.x_chips then
+		hand_chips = mod_chips(hand_chips * edi.x_chips)
+		update_hand_text({delay = 0}, {chips = hand_chips})
+		card_eval_status_text(trg, 'extra', nil, percent, nil,
+		{message = 'X'.. edi.x_chips ..' Chips',
+		edition = true,
+		x_chips = true})
+	end
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = 'if context.cardarea == G.hand then'
+position = 'after'
+match_indent = true
+payload = '''
+    local h_x_chips = card:get_chip_h_x_chips()
+    if h_x_chips > 0 then
+        ret.x_chips = h_x_chips
+    end
+
+    local h_p_dollars = card:get_chip_h_p_dollars()
+    if h_p_dollars > 0 then 
+        ease_dollars(-h_p_dollars)
+        card_eval_status_text(card, 'dollars', -(card.ability.h_p_dollars), percent)
+    end
+
+'''
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''G.GAME.tags[i]:apply_to_run({type = 'voucher_add'})'''
+position = "before"
+payload = '''
+]]
+'''
+match_indent = false
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''card.ability.booster_pos = i'''
+position = "after"
+payload = '''
+                                                card:start_materialize()
+                                                G.shop_booster:emplace(card)
+                                            end
+                                        end
+
+                                        if G.GAME.vagrancy_award and G.GAME.vagrancy_award > 0 and G.GAME.vagrancy_award_complete == false then
+                                            local mega_pack_list = {}
+                                            for k, v in ipairs(G.P_CENTER_POOLS['Booster']) do
+                                                if not G.GAME.banned_keys[v.key] then
+                                                    if v.cost >= 8 then
+                                                        mega_pack_list[k] = v
+                                                    end
+                                                end
+                                            end
+                                            for ii = 1, G.GAME.vagrancy_award do
+                                                local chosen_pack = pseudorandom_element(mega_pack_list, pseudoseed('vag'))
+                                                local card = Card(G.shop_booster.T.x + G.shop_booster.T.w/2,
+                                                G.shop_booster.T.y, G.CARD_W*1.27, G.CARD_H*1.27, G.P_CARDS.empty, G.P_CENTERS[chosen_pack.key], {bypass_discovery_center = true, bypass_discovery_ui = true})
+                                                create_shop_card_ui(card, 'Booster', G.shop_booster)
+                                                card.ability.booster_pos = ii + 2
+                                                card:start_materialize()
+                                                card.cost = 0
+                                                card.ability.couponed = true
+                                                G.shop_booster:emplace(card)
+                                            end
+                                            G.GAME.vagrancy_award_complete = true
+                                        end
+
+                                        for i = 1, #G.GAME.tags do
+--[[
+'''
+match_indent = false
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''self.sell_cost = math.max(1, math.floor(self.cost/2)) + (self.ability.extra_value or 0)'''
+position = "after"
+payload = '''
+    if self.ability.obedience then self.sell_cost = (self.ability.extra_value or 0) end
+'''
+match_indent = false
+overwrite = false

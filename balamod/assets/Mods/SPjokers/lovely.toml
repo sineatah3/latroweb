@@ -1,0 +1,15 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "back.lua"
+pattern = '''if self.name == 'Plasma Deck' and args.context == 'final_scoring_step' then'''
+position = "at"
+payload = '''
+    if (self.name == 'Plasma Deck' or next(find_joker('plasma'))) and args.context == 'final_scoring_step' then
+'''
+match_indent = false
+overwrite = false
